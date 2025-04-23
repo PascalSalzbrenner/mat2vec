@@ -4,6 +4,8 @@ import unidecode
 from os import path
 from monty.fractions import gcd_float
 
+from inflect import engine as inflect_engine
+
 from chemdataextractor.doc import Paragraph
 from gensim.models.phrases import Phraser
 
@@ -52,10 +54,13 @@ class MaterialsTextProcessor:
     ELEMENTS_AND_NAMES = ELEMENTS + ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]
     ELEMENTS_NAMES_UL = ELEMENT_NAMES + [en.capitalize() for en in ELEMENT_NAMES]
 
-    # Elemement with the valence state in parenthesis.
+    # Element with the valence state in parenthesis.
     ELEMENT_VALENCE_IN_PAR = regex.compile(r"^("+r"|".join(ELEMENTS_AND_NAMES) +
                                            r")(\(([IV|iv]|[Vv]?[Ii]{0,3})\))$")
     ELEMENT_DIRECTION_IN_PAR = regex.compile(r"^(" + r"|".join(ELEMENTS_AND_NAMES) + r")(\(\d\d\d\d?\))")
+
+    # fraction
+    IS_FRACTION = regex.compile(r".*(\d+/\d+).*")
 
     # Exactly IV, VI or has 2 consecutive II, or roman in parenthesis: is not a simple formula.
     VALENCE_INFO = regex.compile(r"(II+|^IV$|^VI$|\(IV\)|\(V?I{0,3}\))")
@@ -92,6 +97,7 @@ class MaterialsTextProcessor:
     def __init__(self, phraser_path=PHRASER_PATH):
         self.elem_name_dict = {en: es for en, es in zip(self.ELEMENT_NAMES, self.ELEMENTS)}
         self.phraser = Phraser.load(phraser_path)
+        self.num2word = inflect_engine()
 
     def tokenize(self, text, split_oxidation=True, keep_sentences=True):
         """Converts a string to a list tokens (words) using a modified chemdataextractor tokenizer.
@@ -113,8 +119,8 @@ class MaterialsTextProcessor:
         def split_token(token, so=split_oxidation):
             """Processes a single token, in case it needs to be split up.
 
-            There are 2 cases when the token is split: A number with a common unit, or an
-            element with a valence state.
+            There are 3 cases when the token is split: A number with a common unit, an
+            element with a valence state, or a fraction.
 
             Args:
                 token: The string to be processed.
@@ -125,12 +131,15 @@ class MaterialsTextProcessor:
             """
             elem_with_valence = self.ELEMENT_VALENCE_IN_PAR.match(token) if so else None
             nr_unit = self.NR_AND_UNIT.match(token)
+            fraction = self.IS_FRACTION.findall(token)
             if nr_unit is not None and nr_unit.group(2) in self.SPLIT_UNITS:
                 # Splitting the unit from number, e.g. "5V" -> ["5", "V"].
                 return [nr_unit.group(1), nr_unit.group(2)]
             elif elem_with_valence is not None:
                 # Splitting element from it"s valence state, e.g. "Fe(II)" -> ["Fe", "(II)"].
                 return [elem_with_valence.group(1), elem_with_valence.group(2)]
+            elif bool(fraction):
+                return [str(float(fraction[0][0])/float(fraction[0][1]))]
             else:
                 return [token]
 
@@ -191,9 +200,11 @@ class MaterialsTextProcessor:
                             or tokens[i - 1] == "〈" and tokens[i + 1] == "〉":
                         pass
                     else:
-                        tok = "<nUm>"
+                        number_word_tokens = self.tokenize(self.num2word.number_to_words(tokens[i], andword=""), keep_sentences=False)
+                        tok = [token for token in number_word_tokens if token not in self.PUNCT]
                 except IndexError:
-                    tok = "<nUm>"
+                    number_word_tokens = self.tokenize(self.num2word.number_to_words(tokens[i], andword=""), keep_sentences=False)
+                    tok = [token for token in number_word_tokens if token not in self.PUNCT]
             elif tok in self.ELEMENTS_NAMES_UL:  # Chemical element name.
                 # Add as a material mention.
                 mat_list.append((tok, self.elem_name_dict[tok.lower()]))
@@ -209,13 +220,13 @@ class MaterialsTextProcessor:
                 # To lowercase if only first letter is uppercase (chemical elements already covered above).
                 tok = tok.lower()
 
-            if remove_accents:
+            if remove_accents and isinstance(tok, str):
                 tok = self.remove_accent(tok)
 
-            processed.append(tok)
+            processed.append(tok) if isinstance(tok, str) else processed.extend(tok)
 
         if make_phrases:
-            processed = self.make_phrases(processed, reps=2)
+            processed = self.make_phrases(processed, reps=1)
 
         return processed, mat_list
 
