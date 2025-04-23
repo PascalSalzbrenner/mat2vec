@@ -17,6 +17,7 @@ and run `pip install --ignore-installed -r requirements.txt`. Note: If you are u
 If the download fails, manually download the [model](https://storage.googleapis.com/mat2vec/pretrained_embeddings), 
 [word embeddings](https://storage.googleapis.com/mat2vec/pretrained_embeddings.wv.vectors.npy) and 
 [output embeddings](https://storage.googleapis.com/mat2vec/pretrained_embeddings.trainables.syn1neg.npy) and put them in mat2vec/training/models.
+1. Manually run `pip install chemdataextractor2`. Unfortunately, this cannot be installed directly from `requirements.txt` as it depends on the `TableDataExtractor` package, which is not hosted on PyPI.
 1. Finalize your chemdataextractor installation by executing ``cde data download`` (You may need to restart your virtual environment for the cde command line interface to be found).
 1. You are ready to go!
 
