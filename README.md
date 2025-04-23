@@ -11,13 +11,12 @@ For those interested in the *ab initio* thermoelectric data, [see below](#thermo
 1. Make sure you have `python3.6` and the `pip` module installed. 
 We recommend using [conda environments](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html).
 1. Navigate to the root folder of this repository (the same folder that contains this README file)
-and run `pip install --ignore-installed -r requirements.txt`. Note: If you are using a conda env and any packages fail to compile during this step, you may need to first install those packages separately with `conda install package_name`. 
+and run `pip install --ignore-installed -r requirements.txt -c constraints.txt`. Note: If you are using a conda env and any packages fail to compile during this step, you may need to first install those packages separately with `conda install package_name`. 
 1. Wait for all the requirements to be downloaded and installed.
 1. Run `python setup.py install` to install this module. This will also download the Word2vec model files.
 If the download fails, manually download the [model](https://storage.googleapis.com/mat2vec/pretrained_embeddings), 
 [word embeddings](https://storage.googleapis.com/mat2vec/pretrained_embeddings.wv.vectors.npy) and 
 [output embeddings](https://storage.googleapis.com/mat2vec/pretrained_embeddings.trainables.syn1neg.npy) and put them in mat2vec/training/models.
-1. Manually run `pip install chemdataextractor2`. Unfortunately, this cannot be installed directly from `requirements.txt` as it depends on the `TableDataExtractor` package, which is not hosted on PyPI.
 1. Finalize your chemdataextractor installation by executing ``cde data download`` (You may need to restart your virtual environment for the cde command line interface to be found).
 1. You are ready to go!
 

@@ -6,3 +6,4 @@ unidecode>=1.1.0
 pymatgen==2024.5.1
 gensim>=3.7.1
 tqdm>=4.32.2
+chemdataextractor2
