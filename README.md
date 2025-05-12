@@ -8,7 +8,6 @@ For those interested in the *ab initio* thermoelectric data, [see below](#thermo
 
 ### Set up
 
-1. Make sure you have `python3.6` and the `pip` module installed. 
 1. Create a python venv.
 1. Navigate to the root folder of this repository (the same folder that contains this README file)
 and run `pip install --ignore-installed -r requirements.txt -c constraints.txt`. Note: If you are using a conda env and any packages fail to compile during this step, you may need to first install those packages separately with `conda install package_name`. 
